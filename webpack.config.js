@@ -1,20 +1,17 @@
 module.exports = {
-  entry: [
-    './src/index.js'
-  ],
+  entry: {
+    javascript: './src/app.js'
+  },
   output: {
     path: __dirname + '/public',
     publicPath: '/',
-    filename: 'js/bundle.js'
+    filename: 'js/app.js'
   },
   module: {
     loaders: [{
+      test: /\.js$/,
       exclude: /node_modules/,
-      loader: 'babel',
-      query:
-        {
-          presets:['react']
-        }
+      loader: 'babel-loader',
     }]
   },
   resolve: {
