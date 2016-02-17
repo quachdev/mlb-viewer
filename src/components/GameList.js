@@ -5,19 +5,18 @@ import GameDetail from './GameDetail.js';
 var GameList = React.createClass({
 	getInitialState: function() {
 		return {
-			gameUrl: ''
+			gameUrl: '',
+			isLoaded: false
 		};
 	},
-	// componentWillReceiveProps: function(nextProps) {
-	// 	console.log('GameList Prop: ' + nextProps);
-	// },
 	handleClick: function(gameUrl) {
 		this.setState({
-			gameUrl: gameUrl
+			gameUrl: gameUrl,
+			// isLoaded: !this.state.isLoaded
 		});
-		console.log('click url: ' + gameUrl);
 	},
 	render: function() {
+		// Create list view from data passed from GameTable.js
 		var gameList = this.props.data.map(function(game) {
 			var homeTeamName = game.home_team_name;
 			var homeTeamScore = game.linescore.r.home;
@@ -48,7 +47,7 @@ var GameList = React.createClass({
 				<ul className="list-group">
 					{gameList}
 				</ul>
-				<GameDetail url={this.state.gameUrl} />
+				<GameDetail url={this.state.gameUrl} isLoaded={!this.state.isLoaded} />
 			</div>
 		);
 	}

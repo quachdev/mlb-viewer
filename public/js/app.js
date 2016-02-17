@@ -19792,19 +19792,18 @@
 
 		getInitialState: function getInitialState() {
 			return {
-				gameUrl: ''
+				gameUrl: '',
+				isLoaded: false
 			};
 		},
-		// componentWillReceiveProps: function(nextProps) {
-		// 	console.log('GameList Prop: ' + nextProps);
-		// },
 		handleClick: function handleClick(gameUrl) {
 			this.setState({
 				gameUrl: gameUrl
 			});
-			console.log('click url: ' + gameUrl);
 		},
+		// isLoaded: !this.state.isLoaded
 		render: function render() {
+			// Create list view from data passed from GameTable.js
 			var gameList = this.props.data.map(function (game) {
 				var homeTeamName = game.home_team_name;
 				var homeTeamScore = game.linescore.r.home;
@@ -19854,7 +19853,7 @@
 					{ className: 'list-group' },
 					gameList
 				),
-				_react2.default.createElement(_GameDetail2.default, { url: this.state.gameUrl })
+				_react2.default.createElement(_GameDetail2.default, { url: this.state.gameUrl, isLoaded: !this.state.isLoaded })
 			);
 		}
 	});
@@ -19882,17 +19881,19 @@
 
 		getInitialState: function getInitialState() {
 			return {
-				players: []
+				batters: []
 			};
+		},
+		componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
+			// Get the batters data from GameDetail component then setState to batters[];
 		},
 		render: function render() {
 			return _react2.default.createElement(
 				'div',
 				null,
-				'DetailedPlayers'
+				this.state.batters
 			);
 		}
-
 	});
 
 	var GameDetail = _react2.default.createClass({
@@ -19900,7 +19901,11 @@
 
 		getInitialState: function getInitialState() {
 			return {
+				isLoading: true,
 				data: [],
+				batters: [],
+				flag: '',
+
 				homeTeamRuns: '',
 				homeTeamHits: '',
 				homeTeamErrors: '',
@@ -19916,7 +19921,6 @@
 		},
 		componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
 			var url = 'http://gd2.mlb.com' + nextProps.url + '/boxscore.json';
-			console.log('received prop url: ' + url);
 			$.ajax({
 				url: url,
 				dataType: 'json',
@@ -19930,9 +19934,14 @@
 				},
 				cache: false,
 				success: function (data) {
-					console.log(data.data.boxscore.linescore.inning_line_score);
+					console.log('Inning Data: ' + data.data.boxscore.linescore.inning_line_score);
+					console.log('Batting Data: ' + data.data.boxscore.batting);
 					this.setState({
 						data: data.data.boxscore.linescore.inning_line_score,
+						batters: data.data.boxscore.batting,
+						// Data is loaded (true) therefore is NOT loading (false)
+						isLoading: !nextProps.isLoaded,
+
 						homeTeamRuns: data.data.boxscore.linescore.home_team_runs,
 						homeTeamHits: data.data.boxscore.linescore.home_team_hits,
 						homeTeamErrors: data.data.boxscore.linescore.home_team_errors,
@@ -19951,7 +19960,14 @@
 				}.bind(this)
 			});
 		},
+		handleClick: function handleClick(teamFlag) {
+			// setState of batters to whichever team is clicked (home, away)
+			// this.setState({ batters: this.state.batters.teamFlag})???
+			this.setState({ flag: teamFlag });
+			console.log('Team: ' + teamFlag);
+		},
 		render: function render() {
+			// Get the home, away and inning values of each game
 			var gameDetails = this.state.data.map(function (linescore, i) {
 				var linescoreHome = linescore.home;
 				var linescoreAway = linescore.away;
@@ -19969,74 +19985,93 @@
 					linescoreAway
 				);
 			}, this);
-			var homeTeamRuns = this.state.homeTeamRuns == '' ? '' : 'Home Team Runs: ' + this.state.homeTeamRuns;
-			var homeTeamHits = this.state.homeTeamHits == '' ? '' : 'Home Team Hits: ' + this.state.homeTeamHits;
-			var homeTeamErrors = this.state.homeTeamErrors == '' ? '' : 'Home Team Errors: ' + this.state.homeTeamErrors;
-			var homeTeamCode = this.state.homeTeamCode == '' ? '' : 'Home Team Code: ' + this.state.homeTeamCode.toUpperCase();
-			var homeTeamName = this.state.homeTeamName == '' ? '' : this.state.homeTeamName;
 
-			var awayTeamRuns = this.state.awayTeamRuns == '' ? '' : 'Away Team Runs: ' + this.state.awayTeamRuns;
-			var awayTeamHits = this.state.awayTeamHits == '' ? '' : 'Away Team Hits: ' + this.state.awayTeamHits;
-			var awayTeamErrors = this.state.awayTeamErrors == '' ? '' : 'Away Team Errors: ' + this.state.awayTeamErrors;
-			var awayTeamCode = this.state.awayTeamCode == '' ? '' : 'Away Team Code: ' + this.state.awayTeamCode.toUpperCase();
-			var awayTeamName = this.state.awayTeamName == '' ? '' : this.state.awayTeamName;
+			// Store variables with state of each value from ajax call in componentWillReceiveProps method
+			var homeTeamRuns = this.state.homeTeamRuns ? this.state.homeTeamRuns : '';
+			var homeTeamHits = this.state.homeTeamHits ? this.state.homeTeamHits : '';
+			var homeTeamErrors = this.state.homeTeamErrors ? this.state.homeTeamErrors : '';
+			var homeTeamCode = this.state.homeTeamCode ? this.state.homeTeamCode.toUpperCase() : '';
+			var homeTeamName = this.state.homeTeamName ? this.state.homeTeamName : '';
+
+			var awayTeamRuns = this.state.awayTeamRuns ? this.state.awayTeamRuns : '';
+			var awayTeamHits = this.state.awayTeamHits ? this.state.awayTeamHits : '';
+			var awayTeamErrors = this.state.awayTeamErrors ? this.state.awayTeamErrors : '';
+			var awayTeamCode = this.state.awayTeamCode ? this.state.awayTeamCode.toUpperCase() : '';
+			var awayTeamName = this.state.awayTeamName ? this.state.awayTeamName : '';
+
+			// Get array of batters
+			var selectedFlag = this.state.flag;
+			var batters = this.state.batters.some(function (batting) {
+				return batting.team_flag === selectedFlag;
+			});
+			console.log('batters: ' + batters);
 
 			return _react2.default.createElement(
 				'div',
 				{ className: 'row' },
-				_react2.default.createElement(
+				!this.state.isLoading ? _react2.default.createElement(
 					'div',
-					{ className: 'col-md-6 col-md-offset-3' },
+					{ className: 'col-md-2 col-md-offset-2' },
+					_react2.default.createElement('br', null),
 					homeTeamCode,
 					' ',
 					_react2.default.createElement('br', null),
-					awayTeamCode,
+					awayTeamCode
+				) : null,
+				!this.state.isLoading ? _react2.default.createElement(
+					'div',
+					{ className: 'col-md-8' },
 					_react2.default.createElement(
 						'ul',
 						{ className: 'list-inline' },
-						gameDetails
-					),
-					_react2.default.createElement(
-						'div',
-						null,
-						homeTeamRuns
-					),
-					_react2.default.createElement(
-						'div',
-						null,
-						awayTeamRuns
-					),
-					_react2.default.createElement(
-						'div',
-						null,
-						homeTeamHits
-					),
-					_react2.default.createElement(
-						'div',
-						null,
-						awayTeamHits
-					),
-					_react2.default.createElement(
-						'div',
-						null,
-						homeTeamErrors
-					),
-					_react2.default.createElement(
-						'div',
-						null,
-						awayTeamErrors
-					),
+						gameDetails,
+						_react2.default.createElement(
+							'li',
+							{ className: 'list-group-item' },
+							'R ',
+							_react2.default.createElement('br', null),
+							homeTeamRuns,
+							' ',
+							_react2.default.createElement('br', null),
+							awayTeamRuns
+						),
+						_react2.default.createElement(
+							'li',
+							{ className: 'list-group-item' },
+							'H ',
+							_react2.default.createElement('br', null),
+							homeTeamHits,
+							' ',
+							_react2.default.createElement('br', null),
+							awayTeamHits
+						),
+						_react2.default.createElement(
+							'li',
+							{ className: 'list-group-item' },
+							'E ',
+							_react2.default.createElement('br', null),
+							homeTeamErrors,
+							' ',
+							_react2.default.createElement('br', null),
+							awayTeamErrors
+						)
+					)
+				) : null,
+				!this.state.isLoading ? _react2.default.createElement(
+					'div',
+					{ className: 'row' },
 					_react2.default.createElement(
 						'button',
-						{ className: 'btn' },
+						{ className: 'btn', onClick: this.handleClick.bind(this, 'home') },
 						homeTeamName
 					),
 					_react2.default.createElement(
 						'button',
-						{ className: 'btn pull-right' },
+						{ className: 'btn pull-right', onClick: this.handleClick.bind(this, 'away') },
 						awayTeamName
 					)
-				)
+				) : null,
+				_react2.default.createElement(GameDetailPlayers, { batters: batters })
 			);
 		}
 	});

@@ -4,23 +4,29 @@ import ReactDOM from 'react-dom';
 var GameDetailPlayers = React.createClass({
 	getInitialState: function() {
 		return {
-			players: []
+			batters: []
 		};
+	},
+	componentWillReceiveProps: function(nextProps) {
+		// Get the batters data from GameDetail component then setState to batters[];
 	},
 	render: function() {
 		return (
 			<div>
-				DetailedPlayers
+				{this.state.batters}
 			</div>
 		);
 	}
-
 });
 
 var GameDetail = React.createClass({
 	getInitialState: function() {
 		return {
+			isLoading: true,
 			data: [],
+			batters: [],
+			flag: '',
+
 			homeTeamRuns: '',
 			homeTeamHits: '',
 			homeTeamErrors: '',
@@ -36,7 +42,6 @@ var GameDetail = React.createClass({
 	},
 	componentWillReceiveProps: function(nextProps) {
 		var url = 'http://gd2.mlb.com'+nextProps.url+'/boxscore.json';
-		console.log('received prop url: ' + url);
 		$.ajax({
 		  url: url,
 		  dataType: 'json',
@@ -50,9 +55,14 @@ var GameDetail = React.createClass({
 		  },
 		  cache: false,
 		  success: function(data) {
-		  	console.log(data.data.boxscore.linescore.inning_line_score);
+		  	console.log('Inning Data: '+ data.data.boxscore.linescore.inning_line_score);
+		  	console.log('Batting Data: '+ data.data.boxscore.batting);
 		    this.setState({
 		    	data: data.data.boxscore.linescore.inning_line_score,
+		    	batters: data.data.boxscore.batting,
+		    	// Data is loaded (true) therefore is NOT loading (false) 
+		    	isLoading: !nextProps.isLoaded,
+
 		    	homeTeamRuns: data.data.boxscore.linescore.home_team_runs,
 		    	homeTeamHits: data.data.boxscore.linescore.home_team_hits,
 		    	homeTeamErrors: data.data.boxscore.linescore.home_team_errors,
@@ -71,7 +81,14 @@ var GameDetail = React.createClass({
 		  }.bind(this)
 		});
 	},
+	handleClick: function(teamFlag) {
+		// setState of batters to whichever team is clicked (home, away)
+		// this.setState({ batters: this.state.batters.teamFlag})???
+		this.setState({ flag: teamFlag });
+		console.log('Team: ' + teamFlag);
+	},
 	render: function() {
+		// Get the home, away and inning values of each game 
 		var gameDetails = this.state.data.map(function(linescore, i) {
 			var linescoreHome = linescore.home;
 			var linescoreAway = linescore.away;
@@ -85,38 +102,68 @@ var GameDetail = React.createClass({
 				</li>
 			);
 		}, this);
-		var homeTeamRuns = this.state.homeTeamRuns == '' ? '':'Home Team Runs: ' + this.state.homeTeamRuns;
-		var homeTeamHits = this.state.homeTeamHits == '' ? '':'Home Team Hits: ' + this.state.homeTeamHits;
-		var homeTeamErrors = this.state.homeTeamErrors == '' ? '':'Home Team Errors: ' + this.state.homeTeamErrors;
-		var homeTeamCode = this.state.homeTeamCode == '' ? '':'Home Team Code: ' + this.state.homeTeamCode.toUpperCase();
-		var homeTeamName = this.state.homeTeamName == '' ? '': this.state.homeTeamName;
+
+		// Store variables with state of each value from ajax call in componentWillReceiveProps method
+		var homeTeamRuns = this.state.homeTeamRuns ? this.state.homeTeamRuns : '';
+		var homeTeamHits = this.state.homeTeamHits ? this.state.homeTeamHits : '';
+		var homeTeamErrors = this.state.homeTeamErrors ? this.state.homeTeamErrors : '';
+		var homeTeamCode = this.state.homeTeamCode ? this.state.homeTeamCode.toUpperCase() : '';
+		var homeTeamName = this.state.homeTeamName ? this.state.homeTeamName : '';
 		
-		var awayTeamRuns = this.state.awayTeamRuns == '' ? '':'Away Team Runs: ' + this.state.awayTeamRuns;
-		var awayTeamHits = this.state.awayTeamHits == '' ? '':'Away Team Hits: ' + this.state.awayTeamHits;
-		var awayTeamErrors = this.state.awayTeamErrors == '' ? '':'Away Team Errors: ' + this.state.awayTeamErrors;
-		var awayTeamCode = this.state.awayTeamCode == '' ? '':'Away Team Code: ' + this.state.awayTeamCode.toUpperCase();
-		var awayTeamName = this.state.awayTeamName == '' ? '': this.state.awayTeamName;
+		var awayTeamRuns = this.state.awayTeamRuns ? this.state.awayTeamRuns : '';
+		var awayTeamHits = this.state.awayTeamHits ? this.state.awayTeamHits : '';
+		var awayTeamErrors = this.state.awayTeamErrors ? this.state.awayTeamErrors : '';
+		var awayTeamCode = this.state.awayTeamCode ? this.state.awayTeamCode.toUpperCase() : '';
+		var awayTeamName = this.state.awayTeamName ? this.state.awayTeamName : '';
+
+		// Get array of batters
+		var selectedFlag = this.state.flag;
+		var batters = this.state.batters.some(function(batting) {
+			return batting.team_flag === selectedFlag;
+		});
+		console.log('batters: '+batters);
 
 		return (
 			<div className="row">
-				<div className="col-md-6 col-md-offset-3">
+				{!this.state.isLoading ? 
+				<div className="col-md-2 col-md-offset-2">
+					<br />
 					{homeTeamCode} <br />
 					{awayTeamCode}
+				</div>
+				:null
+				}
+				{!this.state.isLoading ?
+				<div className="col-md-8">
 					<ul className="list-inline">
 						{gameDetails}
+						<li className="list-group-item">
+							R <br />
+							{homeTeamRuns} <br />
+							{awayTeamRuns}
+						</li>
+						<li className="list-group-item">
+							H <br />
+							{homeTeamHits} <br />
+							{awayTeamHits} 
+						</li>
+						<li className="list-group-item">
+							E <br />
+							{homeTeamErrors} <br />
+							{awayTeamErrors}
+						</li>
 					</ul>
-					<div>{homeTeamRuns}</div>
-					<div>{awayTeamRuns}</div>
-
-					<div>{homeTeamHits}</div>
-					<div>{awayTeamHits}</div>
-
-					<div>{homeTeamErrors}</div>
-					<div>{awayTeamErrors}</div>
-
-					<button className="btn">{homeTeamName}</button>
-					<button className='btn pull-right'>{awayTeamName}</button>
 				</div>
+				:null
+				}
+				{!this.state.isLoading ?
+				<div className="row">
+					<button className="btn" onClick={this.handleClick.bind(this, 'home')}>{homeTeamName}</button>
+					<button className='btn pull-right' onClick={this.handleClick.bind(this, 'away')}>{awayTeamName}</button>
+				</div>
+				:null
+				}
+				<GameDetailPlayers batters={batters} />
 			</div>
 		);
 	}
