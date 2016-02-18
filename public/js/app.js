@@ -19798,13 +19798,14 @@
 		},
 		handleClick: function handleClick(gameUrl) {
 			this.setState({
-				gameUrl: gameUrl
+				gameUrl: gameUrl,
+				// isLoaded: !this.state.isLoaded
+				isLoaded: true
 			});
 		},
-		// isLoaded: !this.state.isLoaded
 		render: function render() {
 			// Create list view from data passed from GameTable.js
-			var gameList = this.props.data.map(function (game) {
+			var gameList = this.props.data.map(function (game, i) {
 				var homeTeamName = game.home_team_name;
 				var homeTeamScore = game.linescore.r.home;
 				var awayTeamName = game.away_team_name;
@@ -19817,7 +19818,7 @@
 				var click = this.handleClick.bind(this, gameUrl);
 				return _react2.default.createElement(
 					'li',
-					{ key: game.location, className: 'list-group-item', onClick: click },
+					{ key: i, className: 'list-group-item', onClick: click },
 					_react2.default.createElement(
 						'span',
 						{ className: parseInt(homeTeamScore, 10) > parseInt(awayTeamScore, 10) ? 'highlight' : '' },
@@ -19853,7 +19854,7 @@
 					{ className: 'list-group' },
 					gameList
 				),
-				_react2.default.createElement(_GameDetail2.default, { url: this.state.gameUrl, isLoaded: !this.state.isLoaded })
+				this.state.isLoaded ? _react2.default.createElement(_GameDetail2.default, { url: this.state.gameUrl, isLoaded: this.state.isLoaded }) : null
 			);
 		}
 	});
@@ -19884,14 +19885,139 @@
 				batters: []
 			};
 		},
-		componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
+		componentDidMount: function componentDidMount() {
 			// Get the batters data from GameDetail component then setState to batters[];
+			this.setState({
+				batters: this.props.batters
+			});
+		},
+		componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
+			this.setState({
+				batters: nextProps.batters
+			});
 		},
 		render: function render() {
+			var batters = this.state.batters ? this.state.batters : null;
+			var batter = batters ? batters.map(function (batter, i) {
+				var name = batter.name;
+				var ab = batter.ab;
+				var r = batter.r;
+				var h = batter.h;
+				var rbi = batter.rbi;
+				var bb = batter.bb;
+				var so = batter.so;
+				var avg = batter.avg;
+
+				return _react2.default.createElement(
+					'tr',
+					{ key: i },
+					_react2.default.createElement(
+						'td',
+						null,
+						name
+					),
+					_react2.default.createElement(
+						'td',
+						null,
+						ab
+					),
+					_react2.default.createElement(
+						'td',
+						null,
+						r
+					),
+					_react2.default.createElement(
+						'td',
+						null,
+						h
+					),
+					_react2.default.createElement(
+						'td',
+						null,
+						rbi
+					),
+					_react2.default.createElement(
+						'td',
+						null,
+						bb
+					),
+					_react2.default.createElement(
+						'td',
+						null,
+						so
+					),
+					_react2.default.createElement(
+						'td',
+						null,
+						avg
+					)
+				);
+			}) : null;
 			return _react2.default.createElement(
 				'div',
-				null,
-				this.state.batters
+				{ className: 'row' },
+				_react2.default.createElement(
+					'div',
+					{ className: 'text-center' },
+					_react2.default.createElement(
+						'h4',
+						null,
+						'Batters'
+					)
+				),
+				_react2.default.createElement(
+					'table',
+					{ className: 'table table-responsive table-striped' },
+					_react2.default.createElement(
+						'tbody',
+						null,
+						_react2.default.createElement(
+							'tr',
+							null,
+							_react2.default.createElement(
+								'th',
+								null,
+								'Name'
+							),
+							_react2.default.createElement(
+								'th',
+								null,
+								'AB'
+							),
+							_react2.default.createElement(
+								'th',
+								null,
+								'R'
+							),
+							_react2.default.createElement(
+								'th',
+								null,
+								'H'
+							),
+							_react2.default.createElement(
+								'th',
+								null,
+								'RBI'
+							),
+							_react2.default.createElement(
+								'th',
+								null,
+								'BB'
+							),
+							_react2.default.createElement(
+								'th',
+								null,
+								'SO'
+							),
+							_react2.default.createElement(
+								'th',
+								null,
+								'AVG'
+							)
+						),
+						batter
+					)
+				)
 			);
 		}
 	});
@@ -19919,8 +20045,20 @@
 				awayTeamName: ''
 			};
 		},
+		componentDidMount: function componentDidMount() {
+			var url = this.props.url ? 'http://gd2.mlb.com' + this.props.url + '/boxscore.json' : null;
+			this.loadData(url);
+			console.log('mounted');
+			// this.setState({
+			// 	isLoading: !this.props.isLoaded
+			// });
+		},
 		componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
-			var url = 'http://gd2.mlb.com' + nextProps.url + '/boxscore.json';
+			var url = nextProps.url ? 'http://gd2.mlb.com' + nextProps.url + '/boxscore.json' : null;
+			console.log('url: ' + url);
+			this.loadData(url);
+		},
+		loadData: function loadData(url) {
 			$.ajax({
 				url: url,
 				dataType: 'json',
@@ -19940,7 +20078,7 @@
 						data: data.data.boxscore.linescore.inning_line_score,
 						batters: data.data.boxscore.batting,
 						// Data is loaded (true) therefore is NOT loading (false)
-						isLoading: !nextProps.isLoaded,
+						isLoading: !this.props.isLoaded,
 
 						homeTeamRuns: data.data.boxscore.linescore.home_team_runs,
 						homeTeamHits: data.data.boxscore.linescore.home_team_hits,
@@ -19967,6 +20105,19 @@
 			console.log('Team: ' + teamFlag);
 		},
 		render: function render() {
+			// Store variables with state of each value from ajax call in componentWillReceiveProps method
+			var homeTeamRuns = this.state.homeTeamRuns ? this.state.homeTeamRuns : '';
+			var homeTeamHits = this.state.homeTeamHits ? this.state.homeTeamHits : '';
+			var homeTeamErrors = this.state.homeTeamErrors ? this.state.homeTeamErrors : '';
+			var homeTeamCode = this.state.homeTeamCode ? this.state.homeTeamCode.toUpperCase() : '';
+			var homeTeamName = this.state.homeTeamName ? this.state.homeTeamName : '';
+
+			var awayTeamRuns = this.state.awayTeamRuns ? this.state.awayTeamRuns : '';
+			var awayTeamHits = this.state.awayTeamHits ? this.state.awayTeamHits : '';
+			var awayTeamErrors = this.state.awayTeamErrors ? this.state.awayTeamErrors : '';
+			var awayTeamCode = this.state.awayTeamCode ? this.state.awayTeamCode.toUpperCase() : '';
+			var awayTeamName = this.state.awayTeamName ? this.state.awayTeamName : '';
+
 			// Get the home, away and inning values of each game
 			var gameDetails = this.state.data.map(function (linescore, i) {
 				var linescoreHome = linescore.home;
@@ -19986,32 +20137,22 @@
 				);
 			}, this);
 
-			// Store variables with state of each value from ajax call in componentWillReceiveProps method
-			var homeTeamRuns = this.state.homeTeamRuns ? this.state.homeTeamRuns : '';
-			var homeTeamHits = this.state.homeTeamHits ? this.state.homeTeamHits : '';
-			var homeTeamErrors = this.state.homeTeamErrors ? this.state.homeTeamErrors : '';
-			var homeTeamCode = this.state.homeTeamCode ? this.state.homeTeamCode.toUpperCase() : '';
-			var homeTeamName = this.state.homeTeamName ? this.state.homeTeamName : '';
-
-			var awayTeamRuns = this.state.awayTeamRuns ? this.state.awayTeamRuns : '';
-			var awayTeamHits = this.state.awayTeamHits ? this.state.awayTeamHits : '';
-			var awayTeamErrors = this.state.awayTeamErrors ? this.state.awayTeamErrors : '';
-			var awayTeamCode = this.state.awayTeamCode ? this.state.awayTeamCode.toUpperCase() : '';
-			var awayTeamName = this.state.awayTeamName ? this.state.awayTeamName : '';
-
 			// Get array of batters
 			var selectedFlag = this.state.flag;
-			var batters = this.state.batters.some(function (batting) {
+			// Gets batter array that corresponds to whichever team (home or away) selected
+			var getBatters = this.state.batters ? this.state.batters.find(function (batting) {
 				return batting.team_flag === selectedFlag;
-			});
-			console.log('batters: ' + batters);
+			}) : null;
+			// Check if batters array exists
+			var batters = getBatters ? getBatters.batter : null;
 
+			// Render the details view
 			return _react2.default.createElement(
 				'div',
 				{ className: 'row' },
 				!this.state.isLoading ? _react2.default.createElement(
 					'div',
-					{ className: 'col-md-2 col-md-offset-2' },
+					{ className: 'col-md-2 col-md-offset-2 highlight' },
 					_react2.default.createElement('br', null),
 					homeTeamCode,
 					' ',
@@ -20062,16 +20203,16 @@
 					{ className: 'row' },
 					_react2.default.createElement(
 						'button',
-						{ className: 'btn', onClick: this.handleClick.bind(this, 'home') },
+						{ className: 'btn btn-primary ' + (selectedFlag == 'home' ? 'active' : ''), onClick: this.handleClick.bind(this, 'home') },
 						homeTeamName
 					),
 					_react2.default.createElement(
 						'button',
-						{ className: 'btn pull-right', onClick: this.handleClick.bind(this, 'away') },
+						{ className: 'btn btn-primary pull-right ' + (selectedFlag == 'away' ? 'active' : ''), onClick: this.handleClick.bind(this, 'away') },
 						awayTeamName
 					)
 				) : null,
-				_react2.default.createElement(GameDetailPlayers, { batters: batters })
+				batters ? _react2.default.createElement(GameDetailPlayers, { batters: batters }) : null
 			);
 		}
 	});

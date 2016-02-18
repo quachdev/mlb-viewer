@@ -13,11 +13,12 @@ var GameList = React.createClass({
 		this.setState({
 			gameUrl: gameUrl,
 			// isLoaded: !this.state.isLoaded
+			isLoaded: true
 		});
 	},
 	render: function() {
 		// Create list view from data passed from GameTable.js
-		var gameList = this.props.data.map(function(game) {
+		var gameList = this.props.data.map(function(game, i) {
 			var homeTeamName = game.home_team_name;
 			var homeTeamScore = game.linescore.r.home;
 			var awayTeamName = game.away_team_name;
@@ -29,7 +30,7 @@ var GameList = React.createClass({
 			var blueJays = homeTeamName || awayTeamName == "Blue Jays" ? '':'';
 			var click = this.handleClick.bind(this, gameUrl);
 			return (
-				<li key={game.location} className="list-group-item" onClick={click}>
+				<li key={i} className="list-group-item" onClick={click}>
 						<span className={parseInt(homeTeamScore, 10) > parseInt(awayTeamScore, 10) ? 'highlight':''}>
 							{homeTeamName}
 							<span className={'pull-right'}>{homeTeamScore}</span> <br />
@@ -47,7 +48,7 @@ var GameList = React.createClass({
 				<ul className="list-group">
 					{gameList}
 				</ul>
-				<GameDetail url={this.state.gameUrl} isLoaded={!this.state.isLoaded} />
+				{this.state.isLoaded ? <GameDetail url={this.state.gameUrl} isLoaded={this.state.isLoaded} /> : null }
 			</div>
 		);
 	}
