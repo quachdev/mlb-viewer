@@ -19687,23 +19687,85 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+	var DateChange = _react2.default.createClass({
+		displayName: 'DateChange',
+
+		render: function render() {
+			return _react2.default.createElement(
+				'div',
+				{ className: 'col-md-1 col-sm-3' },
+				_react2.default.createElement(
+					'form',
+					{ onSubmit: this.props.handleSubmit },
+					_react2.default.createElement(
+						'div',
+						{ className: 'form-group' },
+						_react2.default.createElement(
+							'label',
+							{ htmlFor: 'year' },
+							'Year'
+						),
+						_react2.default.createElement('input', { type: 'text', name: 'year', id: 'year', className: 'form-control', value: this.props.year, placeholder: 'yyyy', onChange: this.props.handleYearChange })
+					),
+					_react2.default.createElement(
+						'div',
+						{ className: 'form-group' },
+						_react2.default.createElement(
+							'label',
+							{ htmlFor: 'month' },
+							'Month'
+						),
+						_react2.default.createElement('input', { type: 'text', name: 'month', id: 'month', className: 'form-control', value: this.props.month, placeholder: 'mm', onChange: this.props.handleMonthChange })
+					),
+					_react2.default.createElement(
+						'div',
+						{ className: 'form-group' },
+						_react2.default.createElement(
+							'label',
+							{ htmlFor: 'day' },
+							'Day'
+						),
+						_react2.default.createElement('input', { type: 'text', name: 'day', id: 'day', className: 'form-control', value: this.props.day, placeholder: 'dd', onChange: this.props.handleDayChange })
+					),
+					_react2.default.createElement(
+						'button',
+						{ type: 'submit', className: 'btn btn-default' },
+						'Change Date'
+					)
+				)
+			);
+		}
+	});
+
 	var GameTable = _react2.default.createClass({
 		displayName: 'GameTable',
 
 		getInitialState: function getInitialState() {
 			return {
+				url: '',
 				data: [],
 				day: '',
 				month: '',
 				year: '',
-				isLoading: true
+				isLoading: true,
+				ajaxSuccess: true
 			};
 		},
 		componentDidMount: function componentDidMount() {
-			var url = "http://gd2.mlb.com/components/game/mlb/year_" + this.props.year + "/month_" + this.props.month + "/day_" + this.props.day + "/master_scoreboard.json";
+			this.loadData(this.props.url);
+		},
+		loadData: function loadData(url) {
 			$.ajax({
-				url: this.props.url,
+				url: url,
 				dataType: 'json',
+				xhrFields: {
+					// The 'xhrFields' property sets additional fields on the XMLHttpRequest.
+					// This can be used to set the 'withCredentials' property.
+					// Set the value to 'true' if you'd like to pass cookies to the server.
+					// If this is enabled, your server must respond with the header
+					// 'Access-Control-Allow-Credentials: true'.
+					withCredentials: false
+				},
 				cache: false,
 				success: function (data) {
 					this.setState({
@@ -19711,24 +19773,64 @@
 						day: data.data.games.day,
 						month: data.data.games.month,
 						year: data.data.games.year,
-						isLoading: false
+						isLoading: false,
+						ajaxSuccess: true
 					});
 				}.bind(this),
 				error: function (xhr, status, err) {
+					this.setState({
+						ajaxSuccess: false
+					});
 					console.error(this.props.url, status, err.toString());
 				}.bind(this)
 			});
+		},
+		handleYearChange: function handleYearChange(e) {
+			this.setState({
+				year: e.target.value.substr(0, 4)
+			});
+		},
+		handleMonthChange: function handleMonthChange(e) {
+			this.setState({
+				month: e.target.value.substr(0, 2)
+			});
+		},
+		handleDayChange: function handleDayChange(e) {
+			this.setState({
+				day: e.target.value.substr(0, 2)
+			});
+		},
+		handleSubmit: function handleSubmit(e) {
+			e.preventDefault();
+			console.log(this.state.year.length);
+			var year = this.state.year;
+			var month = this.state.month;
+			var newMonth = month.length == 1 ? '0' + month : month;
+			var day = this.state.day;
+			var newDay = day.length == 1 ? '0' + day : day;
+			var url = "http://gd2.mlb.com/components/game/mlb/year_" + year + "/month_" + newMonth + "/day_" + newDay + "/master_scoreboard.json";
+			this.loadData(url);
 		},
 		render: function render() {
 			return _react2.default.createElement(
 				'div',
 				{ className: 'row' },
-				_react2.default.createElement(
+				this.state.ajaxSuccess ? _react2.default.createElement(DateChange, { year: this.state.year, month: this.state.month, day: this.state.day, handleSubmit: this.handleSubmit, handleYearChange: this.handleYearChange, handleMonthChange: this.handleMonthChange, handleDayChange: this.handleDayChange }) : _react2.default.createElement(
 					'div',
-					{ className: 'col-md-6 col-md-offset-3' },
+					null,
+					_react2.default.createElement(
+						'h4',
+						null,
+						'Invalid Date please set the correct date.'
+					),
+					_react2.default.createElement(DateChange, { year: this.state.year, month: this.state.month, day: this.state.day, handleSubmit: this.handleSubmit, handleYearChange: this.handleYearChange, handleMonthChange: this.handleMonthChange, handleDayChange: this.handleDayChange })
+				),
+				this.state.ajaxSuccess ? _react2.default.createElement(
+					'div',
+					{ className: 'col-md-6 col-md-offset-3 col-sm-6 col-sm-offset-3' },
 					!this.state.isLoading ? _react2.default.createElement(_GameDate2.default, { month: this.state.month, day: this.state.day, year: this.state.year }) : null,
 					!this.state.isLoading ? _react2.default.createElement(_GameList2.default, { data: this.state.data }) : null
-				)
+				) : ''
 			);
 		}
 
@@ -19758,7 +19860,7 @@
 		render: function render() {
 			return _react2.default.createElement(
 				'h1',
-				null,
+				{ className: 'text-center' },
 				this.props.month,
 				' ',
 				this.props.day,
@@ -19810,10 +19912,6 @@
 		render: function render() {
 			// Create list view from data passed from GameTable.js
 			// Sort the list first with anything with Blue Jays in the home/away team being first
-			var list = this.props.data.some(function (game) {
-				return game.home_team_name == "Blue Jays";
-			});
-			// console.log('Home Team is Blue Jays: ' + list);
 			var gameList = this.props.data.sort(function (game1, game2) {
 				var matchGame1 = game1.home_team_name === 'Blue Jays' || game1.away_team_name === 'Blue Jays';
 				var matchGame2 = game2.home_team_name === 'Blue Jays' || game2.away_team_name === 'Blue Jays';
@@ -19976,7 +20074,8 @@
 					_react2.default.createElement(
 						'h4',
 						null,
-						'Batters'
+						'Batters for ',
+						this.props.teamPlaying
 					)
 				),
 				_react2.default.createElement(
@@ -20081,8 +20180,6 @@
 				},
 				cache: false,
 				success: function (data) {
-					console.log('Inning Data: ' + data.data.boxscore.linescore.inning_line_score);
-					console.log('Batting Data: ' + data.data.boxscore.batting);
 					this.setState({
 						data: data.data.boxscore.linescore.inning_line_score,
 						batters: data.data.boxscore.batting,
@@ -20107,11 +20204,11 @@
 				}.bind(this)
 			});
 		},
-		handleClick: function handleClick(teamFlag) {
-			// setState of batters to whichever team is clicked (home, away)
-			// this.setState({ batters: this.state.batters.teamFlag})???
-			this.setState({ flag: teamFlag });
-			console.log('Team: ' + teamFlag);
+		handleClick: function handleClick(teamFlag, teamPlaying) {
+			this.setState({
+				flag: teamFlag,
+				teamPlaying: teamPlaying
+			});
 		},
 		render: function render() {
 			// Store variables with state of each value from ajax call in componentWillReceiveProps method
@@ -20153,6 +20250,7 @@
 				return batting.team_flag === selectedFlag;
 			}) : null;
 			// Check if batter array exists
+			// Exists after user clicks on one of the teams
 			var batters = getBatters ? getBatters.batter : null;
 
 			// Render the details view
@@ -20212,16 +20310,16 @@
 					{ className: 'row' },
 					_react2.default.createElement(
 						'button',
-						{ className: 'btn btn-primary ' + (selectedFlag == 'home' ? 'active' : ''), onClick: this.handleClick.bind(this, 'home') },
+						{ className: 'btn btn-primary ' + (selectedFlag == 'home' ? 'active' : ''), onClick: this.handleClick.bind(this, 'home', homeTeamName) },
 						homeTeamName
 					),
 					_react2.default.createElement(
 						'button',
-						{ className: 'btn btn-primary pull-right ' + (selectedFlag == 'away' ? 'active' : ''), onClick: this.handleClick.bind(this, 'away') },
+						{ className: 'btn btn-primary pull-right ' + (selectedFlag == 'away' ? 'active' : ''), onClick: this.handleClick.bind(this, 'away', awayTeamName) },
 						awayTeamName
 					)
 				) : null,
-				batters ? _react2.default.createElement(GameDetailPlayers, { batters: batters }) : null
+				batters ? _react2.default.createElement(GameDetailPlayers, { batters: batters, teamPlaying: this.state.teamPlaying }) : null
 			);
 		}
 	});

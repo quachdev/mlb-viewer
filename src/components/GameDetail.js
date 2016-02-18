@@ -47,7 +47,7 @@ var GameDetailPlayers = React.createClass({
 		return (
 			<div className="row">
 				<div className="text-center">
-					<h4>Batters</h4>
+					<h4>Batters for {this.props.teamPlaying}</h4>
 				</div>
 				<table className="table table-responsive table-striped">
 				<tbody>
@@ -112,8 +112,6 @@ var GameDetail = React.createClass({
 		  },
 		  cache: false,
 		  success: function(data) {
-		  	console.log('Inning Data: '+ data.data.boxscore.linescore.inning_line_score);
-		  	console.log('Batting Data: '+ data.data.boxscore.batting);
 		    this.setState({
 		    	data: data.data.boxscore.linescore.inning_line_score,
 		    	batters: data.data.boxscore.batting,
@@ -138,11 +136,11 @@ var GameDetail = React.createClass({
 		  }.bind(this)
 		});
 	},
-	handleClick: function(teamFlag) {
-		// setState of batters to whichever team is clicked (home, away)
-		// this.setState({ batters: this.state.batters.teamFlag})???
-		this.setState({ flag: teamFlag });
-		console.log('Team: ' + teamFlag);
+	handleClick: function(teamFlag, teamPlaying) {
+		this.setState({ 
+			flag: teamFlag,
+			teamPlaying: teamPlaying
+		});
 	},
 	render: function() {
 		// Store variables with state of each value from ajax call in componentWillReceiveProps method
@@ -183,6 +181,7 @@ var GameDetail = React.createClass({
 			: null
 		;
 		// Check if batter array exists
+		// Exists after user clicks on one of the teams
 		var batters = getBatters ? getBatters.batter : null;
 
 		// Render the details view
@@ -221,12 +220,12 @@ var GameDetail = React.createClass({
 				}
 				{!this.state.isLoading ?
 				<div className="row">
-					<button className={'btn btn-primary ' + (selectedFlag == 'home' ? 'active':'')} onClick={this.handleClick.bind(this, 'home')}>{homeTeamName}</button>
-					<button className={'btn btn-primary pull-right ' + (selectedFlag == 'away' ? 'active':'')} onClick={this.handleClick.bind(this, 'away')}>{awayTeamName}</button>
+					<button className={'btn btn-primary ' + (selectedFlag == 'home' ? 'active':'')} onClick={this.handleClick.bind(this, 'home', homeTeamName)}>{homeTeamName}</button>
+					<button className={'btn btn-primary pull-right ' + (selectedFlag == 'away' ? 'active':'')} onClick={this.handleClick.bind(this, 'away', awayTeamName)}>{awayTeamName}</button>
 				</div>
 				:null
 				}
-				{batters ? <GameDetailPlayers batters={batters} /> : null }
+				{batters ? <GameDetailPlayers batters={batters} teamPlaying={this.state.teamPlaying}/> : null }
 			</div>
 		);
 	}

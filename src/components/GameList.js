@@ -20,12 +20,7 @@ var GameList = React.createClass({
 	render: function() {
 		// Create list view from data passed from GameTable.js
 		// Sort the list first with anything with Blue Jays in the home/away team being first
-		var list = this.props.data.some(function(game) {
-			return (game.home_team_name == "Blue Jays")
-		});
-		// console.log('Home Team is Blue Jays: ' + list);
-		var gameList = this.props.data.
-		sort(function(game1, game2) {
+		var gameList = this.props.data.sort(function(game1, game2) {
 			var matchGame1 = game1.home_team_name === 'Blue Jays' || game1.away_team_name === 'Blue Jays';
 			var matchGame2 = game2.home_team_name === 'Blue Jays' || game2.away_team_name === 'Blue Jays';
 			return (matchGame2 ? 1 : 0) - (matchGame1 ? 1 : 0);
