@@ -10,9 +10,11 @@ var GameTable = React.createClass({
 			day: '',
 			month: '',
 			year: '',
+			isLoading: true
 		};
 	},
 	componentDidMount: function() {
+		var url = "http://gd2.mlb.com/components/game/mlb/year_"+this.props.year+"/month_"+this.props.month+"/day_"+this.props.day+"/master_scoreboard.json";
 		$.ajax({
 		  url: this.props.url,
 		  dataType: 'json',
@@ -23,6 +25,7 @@ var GameTable = React.createClass({
 		    	day: data.data.games.day,
 		    	month: data.data.games.month,
 		    	year: data.data.games.year,
+		    	isLoading: false
 		    });
 		  }.bind(this),
 		  error: function(xhr, status, err) {
@@ -34,8 +37,14 @@ var GameTable = React.createClass({
 		return (
 			<div className="row">
 				<div className="col-md-6 col-md-offset-3">
-					<GameDate month={this.state.month} day={this.state.day} year={this.state.year} />
-					<GameList data={this.state.data} />
+					{!this.state.isLoading ?
+						<GameDate month={this.state.month} day={this.state.day} year={this.state.year} />
+						: null
+					}
+					{!this.state.isLoading ?
+						<GameList data={this.state.data} />
+						: null 
+					}
 				</div>
 			</div>
 		);
